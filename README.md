@@ -5,7 +5,7 @@
 - Duy Nguyen
 
 ### Purpose of Our Project
-The CEO and CFO of a major brewing company have provided our team with a dataset for nationwide statistics of beers and breweries. Our job as data scientists are to perform a throughough investigation into this data. 
+The CEO and CFO of a major brewing company have provided our team with a dataset for nationwide statistics of beers and breweries. Our job as data scientists are to perform a thorough investigation into this data. 
 
 Things we have found include but are not limited to: 
 - Outlining the data through graphical means
