@@ -20,7 +20,7 @@ To cap off the investigation, we took an in-depth look into the distributions of
    - `CaseStudy1_Rubric.pdf`- Contains the grading rubric including the percentage of each detailed requirements
 2. `src` - Contains the source files
    - `EDA.Rmd` - Contains the source code for the Exploratory Data analysis
-   - `EDA.html` - Contains the supplemental plots and graphs as well as our answers to the 7 required questions
+   - `EDA.html` - Contains the supplemental plots and graphs as well as our answers to the 7 questions
    - `Beers.csv` - Contains data on 2410 craft canned beers
    - `Breweries.csv` - Contains data for 558 breweries in the United States 
 3. `Duy & Garrett - Case Study 1.pptx` - This is the PowerPoint deck which serves as the core presentation of our project
