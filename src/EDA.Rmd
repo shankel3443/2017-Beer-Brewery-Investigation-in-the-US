@@ -1,0 +1,303 @@
+---
+title: "MSDS 6306: Doing Data Science - Case Study 1"
+author: "Duy Nguyen and Garrett Shankel"
+date: "3/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+The CEO and CFO of a major brewing company have provided our team with a dataset for nationwide statistics of beers and breweries. Our job as data scientists are to perform a thorough investigation into this data.
+
+Things we have found include but are not limited to:
+
+Outlining the data through graphical means
+Mapping the correlations between ABV and IBU
+Investigating the brewery density per state
+
+To cap off the investigation, we took an in-depth look into the distributions of the top 10 beers styles to provide an incentive for market expansion.
+
+## Libraries
+
+```{r message = FALSE}
+library(tidyverse) # dplyr, ggplot2, tidyr, stringr
+library(GGally)
+library(class)
+library(caret)
+library(ggpubr)
+library(usmap)
+library(gtrendsR)
+library(lessR)
+
+```
+
+## Reading In Data From File
+
+```{r}
+getwd()
+breweries = read.csv('Breweries.csv')
+beers = read.csv('Beers.csv')
+```
+
+## 1.1. How Many Breweries are Present in Each State?
+[insert explicit answer]
+```{r}
+# Wrangling the data and plot
+breweries1 = breweries %>%
+  group_by(State) %>%
+  summarise(count = n())
+ggplot(breweries1, aes(x = State, y = count, fill = State)) + 
+  geom_bar(stat = "identity") + 
+  geom_text(aes(label = count), vjust = -0.3) +
+  scale_x_discrete(labels = NULL, breaks = NULL) + labs(x = "") +
+  ggtitle("Number of Breweries In Each State")
+
+# Displaying top 5 states in terms of breweries
+topbreweries = breweries %>% count(State, sort = TRUE)
+head(topbreweries)
+```
+
+## 1.2. Building a Brewery Count Heatmap
+[insert explicit answer]
+```{r}
+# Pulling centroid positions for US heatmap
+centroid_labels <- utils::read.csv(system.file("extdata", paste0("us_", "states", "_centroids.csv"), package = "usmap"), stringsAsFactors = FALSE)
+head(centroid_labels)
+
+# Changing column name for merging
+colnames(breweries1)[1] <- "abbr"
+
+# Fixing "abbr" column by trimming leading spaces
+breweries1$abbr <- trimws(breweries1$abbr, which = c("left")) 
+head(breweries1)
+
+# Facilitating the merge
+breweries_with_position = merge(centroid_labels, breweries1, by = as.factor(c("abbr")))
+breweries_with_position$count <- as.numeric(breweries_with_position$count)
+breweries_with_position$fips <- as.character(breweries_with_position$fips)
+head(breweries_with_position)
+
+# Isolating the large states for plotting
+breweries_with_position_small_states = breweries_with_position[(breweries_with_position$abbr == "DC") | (breweries_with_position$abbr == "MD") | (breweries_with_position$abbr == "DE") | (breweries_with_position$abbr == "CT") | (breweries_with_position$abbr == "NH") | (breweries_with_position$abbr == "MA") | (breweries_with_position$abbr == "VT") | (breweries_with_position$abbr == "NJ") | (breweries_with_position$abbr == "RI"),]
+
+breweries_with_position_large_states = setdiff(breweries_with_position, breweries_with_position_small_states)
+
+# Plot labeled US Map for Breweries Count
+plot_usmap(fill = "white", color = "darkblue") + 
+  geom_text(size = 2.7, color = "red", data = breweries_with_position_large_states, aes(x = x, y = y, label = paste(abbr, count, sep = ":")))
+
+# Plot labeled Smaller Eastern States 
+plot_usmap(include = c("DC", "MD", "DE", "CT", "NH", "MA", "VT", "NJ", "RI"), color = "darkblue") +
+  geom_text(size = 2.7, color = "red", data = breweries_with_position_small_states, aes(x = x, y = y, label = paste(abbr, count, sep = ":")))
+```
+
+## 1.2. Building a Brewery Density versus Population Heatmap
+[insert explicit answer]
+```{r}
+# Facilitating the merge
+breweries_with_position <- breweries_with_position %>% relocate(abbr, .before = x)
+breweries_with_position <- breweries_with_position %>% relocate(fips, .before = abbr)
+str(statepop)
+str(breweries_with_position)
+
+# Merge
+breweries_with_position = breweries_with_position[c(2,5,6)]
+USBreweries = merge(statepop, breweries_with_position)
+colnames(USBreweries)[5] <- "breweries"
+str(USBreweries)
+
+# US Heat Map of Brewery vs Population
+plot_usmap(data = USBreweries, values = "breweries", color = "orange") + 
+  scale_fill_continuous(low = "white", high = "orange", name = "Breweries (2017)", label = scales::comma) +
+  theme(legend.position = "right")
+```
+
+## 2. Merging "Beers" Data With "Breweries" Data
+[insert explicit answer]
+```{r}
+# Rename column in Beers.csv for merging
+colnames(beers)[5] = "Brew_ID" 
+mergedData = merge(breweries, beers, by = c("Brew_ID"))
+
+# Rename columns of merged data for clarity
+colnames(mergedData)[2] = "Brewery_Name"
+colnames(mergedData)[5] = "Beer_Name"
+
+head(mergedData)
+tail(mergedData)
+```
+
+## 3. Addressing The Missing Values In Each Column
+[insert explicit answer]
+```{r}
+# Inspecting Data
+length(unique(breweries$State))
+str(mergedData)
+
+# Checking NAs
+colSums(is.na(mergedData))
+
+ggplot(mergedData, aes(x = ABV)) + geom_density() 
+# Since column ABV's plot is somewhat normal, we will impute its missing values with mean estimates
+mergedData = mergedData %>% 
+  mutate(ABV = replace_na(ABV, replace = mean(mergedData$ABV, na.rm = TRUE)))
+
+ggplot(mergedData, aes(x = IBU)) + geom_density()
+# Since column IBU's plot is heavily skewed right, we will impute its missing values using median estimates
+mergedData = mergedData %>% 
+  mutate(IBU = replace_na(IBU, replace = median(mergedData$IBU, na.rm = TRUE)))
+
+head(mergedData)
+tail(mergedData)
+```
+
+## 4. Computing medians for ABV and IBU of each state
+[insert explicit answer]
+```{r}
+# Plot medium ABV
+mergedDataABV = mergedData %>% group_by(State) %>% summarise(median = median(ABV))
+ggplot(mergedDataABV, aes(x = State, y = median, fill = State)) + 
+  geom_bar(stat = "identity") +
+  scale_x_discrete(labels = NULL, breaks = NULL) + labs(x = "") +
+  ggtitle("Median Alcohol By Volume In Each State")
+
+# Plot medium IBU
+mergedDataIBU = mergedData %>% group_by(State) %>% summarise(median = median(IBU))
+ggplot(mergedDataIBU, aes(x = State, y = median, fill = State)) + 
+  geom_bar(stat = "identity") +
+  scale_x_discrete(labels = NULL, breaks = NULL) + labs(x = "") +
+  ggtitle("Median International Bitterness Unit In Each State")
+
+```
+
+## 5. Determine which state with the maximum alcoholic (ABV) beer, and the most bitter (IBU) beer
+[insert explicit answer]
+```{r}
+mergedData[which.max(mergedData$ABV), "State"]
+
+mergedData[which.max(mergedData$IBU), "State"]
+```
+
+## 6. Summary and Distribution of the ABV variable
+[insert explicit answer]
+```{r}
+str(mergedData[c("ABV")])
+summary(mergedData[c("ABV")])
+sd(mergedData$ABV)
+
+hist(mergedData$ABV, 
+     main = "Distribution of ABV",
+     prob = TRUE,
+     xlab = "Alcohol By Volume (Units)",
+     border = "darkblue",
+     col = "orange",
+     ylim = c(0,40))
+lines(density(mergedData$ABV),
+      lwd = 2, # thickness of density line
+      col = "chocolate3")
+
+plot(mergedData$ABV, ylab = "Alcohol By Volume", pch=19)
+
+boxplot(mergedData$ABV, horizontal = TRUE, notch = TRUE)
+
+```
+
+## 7. Relationship Between Bitterness and Alcoholic Content
+[insert explicit answer]
+```{r}
+# Scatter plot of relationship of IBU and ABV
+ggscatter(mergedData, x = "IBU", y = "ABV", 
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "International Bitterness Unit", ylab = "Alcohol By Volume")
+```
+
+## 8.1. Investigating the difference with respect to IBU and ABV, between IPAs and other types of Ale
+[insert explicit answer]
+```{r}
+# Checking NA's
+colSums(is.na(mergedData))
+# Since no more NA's exist, we can proceed to build a KNN model
+
+# Filtering and selecting the interested beer statistics
+IPAandALE = filter(mergedData, grepl("IPA|Ale", Style))
+IPAandALE_KNN = select(IPAandALE, ABV, IBU, Style)
+
+# Iterate through each row of Style and match & sub to only say IPA or Ale.
+for (i in 1:nrow(IPAandALE_KNN)) {
+  if (is.na(str_match(IPAandALE_KNN[i, 3], ".Ale"))) {
+    IPAandALE_KNN[i, 3] = "IPA"
+  } else {
+    IPAandALE_KNN[i, 3] = "ALE"
+  }
+}
+
+# Setting up a 70/30 split for a train and test set
+set.seed(760397, sample.kind = "Rounding")
+splitPercent = .7
+trainIndex = sample(1:dim(IPAandALE_KNN)[1], round(splitPercent * dim(IPAandALE_KNN)[1]))
+train = IPAandALE_KNN[trainIndex,]
+test = IPAandALE_KNN[-trainIndex,]
+
+# Train the KNN model using beer Style as class, and IBU and ABV as determinants
+classifications = knn(train[, c(1:2)], test[, c(1:2)], train$Style, prob = TRUE, k = 20)
+confusionMatrix(table(classifications, test$Style))
+```
+
+## 8.2. Hypertuning K
+[insert explicit answer]
+```{r}
+# Set placeholders for accuracy and k
+hypertune = data.frame(accuracy = numeric(100), k = numeric(100))
+
+# This 'for' loop iterates the training of our KNN model 100 times
+for (i in 1:100)
+{
+set.seed(i)
+trainIndex = sample(seq(1:length(IPAandALE_KNN$ABV)), round(.7 * length(IPAandALE_KNN$ABV)))
+trainBeer = IPAandALE_KNN[trainIndex,]
+testBeer = IPAandALE_KNN[-trainIndex,]
+
+classifications = knn(train[, c(1:2)], test[, c(1:2)], train$Style, prob = TRUE, k = i)
+CM = confusionMatrix(table(classifications, test$Style))
+
+hypertune$accuracy[i] = CM$overall[1]
+hypertune$k[i] = i
+}
+
+# Plot of the hypertuning of k
+ggplot(hypertune, aes(x = k, y = accuracy)) +
+  geom_line() +
+  labs(x = "Tally", y = "Accuracy")
+
+# Display the highest accuracy and its k
+max(hypertune$accuracy)
+which.max(hypertune$accuracy)
+```
+
+## 9. Knocking your socks off
+[insert explicit answer]
+```{r}
+# Wrangling the data
+topbeers = mergedData %>% count(Style, sort = TRUE)
+top10beers = head(topbeers, 10)
+  
+top10beers
+str(top10beers)
+
+# Variable to store the colors of the corresponding top 10 beer styles
+mypallete = c("#C44D00", "#E9AF01", "#772725", "#DFAE01", "#C8881A", "#F8B506", "#480F08", "#312223", "#CB8226", "#E9B801")
+
+# Calculate the beer style percentages
+percentages = (top10beers[[2]] / sum(top10beers[[2]])) * 100
+top10_percentages_rounded = round(percentages, digits = 0)
+top10_names_and_percentages = paste(top10beers[[1]], top10_percentages_rounded)
+top10_names_and_percentages = paste(top10_names_and_percentages, "%", sep = "")
+
+# Plot a pie chart of the top 10 beer styles with percentages
+pie(top10beers[[2]], top10_names_and_percentages, col = mypallete, border = "white",
+    main="Beer Styles Pie Chart")
+```
