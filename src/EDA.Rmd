@@ -171,6 +171,19 @@ ggplot(mergedDataIBU, aes(x = State, y = median, fill = State)) +
   scale_x_discrete(labels = NULL, breaks = NULL) + labs(x = "") +
   ggtitle("Median International Bitterness Unit In Each State")
 
+# Plot vertical histogram for both ABV and IBU
+mergedDataIBU = mergedData %>% group_by(State) %>% summarise(median = median(IBU))
+mergedDataABV = mergedData %>% group_by(State) %>% summarise(median = median(ABV))
+mergedDataABV = as.data.frame(mergedDataABV)
+mergedDataIBU = as.data.frame(mergedDataIBU)
+ABV_IBU_median = merge(mergedDataABV, mergedDataIBU, by = "State")
+colnames(ABV_IBU_median)[2] <- "median_ABV"
+colnames(ABV_IBU_median)[3] <- "median_IBU"
+ABV_IBU_median$median_ABV = ABV_IBU_median$median_ABV * -1000
+
+longTest = gather(ABV_IBU_median, moc, value, median_ABV:median_IBU)
+
+longTest %>% ggplot(aes(x = value, y = State, fill = moc)) + geom_bar(stat = "identity") + scale_x_continuous(breaks = c(-60, 0, 60), labels = c(60, 0, 60)) + theme_bw() + scale_fill_discrete(name = "Measure of Center", labels = c("Median ABV", "Median IBU"))
 ```
 
 ## 5. Determine which state with the maximum alcoholic (ABV) beer, and the most bitter (IBU) beer
@@ -279,7 +292,7 @@ max(hypertune$accuracy)
 which.max(hypertune$accuracy)
 ```
 
-## 9. Knocking your socks off
+## 9. Knocking your socks off with the top 10 beer styles
 [insert explicit answer]
 ```{r}
 # Wrangling the data
@@ -301,6 +314,10 @@ top10_names_and_percentages = paste(top10_names_and_percentages, "%", sep = "")
 # Plot a pie chart of the top 10 beer styles with percentages
 pie(top10beers[[2]], top10_names_and_percentages, col = mypallete, border = "white",
     main="Beer Styles Pie Chart")
+```
+
+## 9.1. Correlation of ABV and IBU of the top 10 beer styles
+```{r}
 ```
 
 ## Conclusion
