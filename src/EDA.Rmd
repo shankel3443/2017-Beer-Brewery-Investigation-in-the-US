@@ -116,7 +116,7 @@ plot_usmap(data = USBreweries, values = "breweries", color = "orange") +
 ```
 
 ## 2. Merging "Beers" Data With "Breweries" Data
-[insert explicit answer]
+After merging we can see that the columns are properly placed with no repeats.
 ```{r}
 # Rename column in Beers.csv for merging
 colnames(beers)[5] = "Brew_ID" 
@@ -155,7 +155,7 @@ tail(mergedData)
 ```
 
 ## 4. Computing medians for ABV and IBU of each state
-[insert explicit answer]
+The medians for both are plotted as histograms.
 ```{r}
 # Plot medium ABV
 mergedDataABV = mergedData %>% group_by(State) %>% summarise(median = median(ABV))
@@ -174,7 +174,8 @@ ggplot(mergedDataIBU, aes(x = State, y = median, fill = State)) +
 ```
 
 ## 5. Determine which state with the maximum alcoholic (ABV) beer, and the most bitter (IBU) beer
-[insert explicit answer]
+Colorado has the maximum alcoholic beer.
+Oregon has the most bitter beer.
 ```{r}
 mergedData[which.max(mergedData$ABV), "State"]
 
@@ -182,7 +183,7 @@ mergedData[which.max(mergedData$IBU), "State"]
 ```
 
 ## 6. Summary and Distribution of the ABV variable
-[insert explicit answer]
+ABV has a minimum of 0.001, a maximum of 0.128, a mean of 0.060, and a median of 0.057. Its standard deviation is 0.013 and its 1st and 3rd quarters are 0.050 and 0.067, respectively. The distribution of ABV is roughly normal based on the histogram, and both the scatterplot and boxplot show lots of variance and outliers.
 ```{r}
 str(mergedData[c("ABV")])
 summary(mergedData[c("ABV")])
@@ -215,8 +216,8 @@ ggscatter(mergedData, x = "IBU", y = "ABV",
           xlab = "International Bitterness Unit", ylab = "Alcohol By Volume")
 ```
 
-## 8.1. Investigating the difference with respect to IBU and ABV, between IPAs and other types of Ale
-[insert explicit answer]
+## 8.1. Using KNN, investigate the difference with respect to IBU and ABV, between IPAs and other types of Ale
+We initially checked for NAs in the data, before training a 70/30 KNN model that results to 80.43% accuracy and a confidence interval of (0.7651, 0.8396). The sensitivity is 0.8874 and the specificity is 0.6587.
 ```{r}
 # Checking NA's
 colSums(is.na(mergedData))
@@ -248,7 +249,7 @@ confusionMatrix(table(classifications, test$Style))
 ```
 
 ## 8.2. Hypertuning K
-[insert explicit answer]
+We also wanted to solidify our results by hypertuning the K in our model, as well as the randomized seed, for 100 times. The best K to use is 4 with an accuracy of 83.70%.
 ```{r}
 # Set placeholders for accuracy and k
 hypertune = data.frame(accuracy = numeric(100), k = numeric(100))
@@ -301,3 +302,6 @@ top10_names_and_percentages = paste(top10_names_and_percentages, "%", sep = "")
 pie(top10beers[[2]], top10_names_and_percentages, col = mypallete, border = "white",
     main="Beer Styles Pie Chart")
 ```
+
+## Conclusion
+...
