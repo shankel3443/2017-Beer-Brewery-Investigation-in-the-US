@@ -88,7 +88,11 @@ breweries_with_position$fips <- as.character(breweries_with_position$fips)
 head(breweries_with_position)
 
 # Isolating the large states for plotting
-breweries_with_position_small_states = breweries_with_position[(breweries_with_position$abbr == "DC") | (breweries_with_position$abbr == "MD") | (breweries_with_position$abbr == "DE") | (breweries_with_position$abbr == "CT") | (breweries_with_position$abbr == "NH") | (breweries_with_position$abbr == "MA") | (breweries_with_position$abbr == "VT") | (breweries_with_position$abbr == "NJ") | (breweries_with_position$abbr == "RI"),]
+breweries_with_position_small_states = breweries_with_position[(breweries_with_position$abbr == "DC") | (breweries_with_position$abbr == "MD") | 
+                                                               (breweries_with_position$abbr == "DE") | (breweries_with_position$abbr == "CT") | 
+                                                               (breweries_with_position$abbr == "NH") | (breweries_with_position$abbr == "MA") | 
+                                                               (breweries_with_position$abbr == "VT") | (breweries_with_position$abbr == "NJ") | 
+                                                               (breweries_with_position$abbr == "RI"),]
 
 breweries_with_position_large_states = setdiff(breweries_with_position, breweries_with_position_small_states)
 
