@@ -10,15 +10,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Introduction
-The CEO and CFO of a major brewing company have provided our team with a dataset for nationwide statistics of beers and breweries. Our job as data scientists are to perform a thorough investigation into this data.
+The CEO and CFO of a major brewing company have provided our team with a dataset for 
+nationwide statistics of beers and breweries. Our job as data scientists are to perform
+a thorough investigation into this data.
 
 Things we have found include but are not limited to:
 
-Outlining the data through graphical means
-Mapping the correlations between ABV and IBU
-Investigating the brewery density per state
+- Outlining the data through graphical means
+- Mapping the correlations between ABV and IBU
+- Investigating the brewery density per state
 
-To cap off the investigation, we took an in-depth look into the distributions of the top 10 beers styles to provide an incentive for market expansion.
+To cap off the investigation, we took an in-depth look into the distributions of 
+the top 10 beers styles to provide an incentive for market expansion.
 
 ## Libraries
 
@@ -43,8 +46,10 @@ beers = read.csv('Beers.csv')
 ```
 
 ## 1.1. How Many Breweries are Present in Each State?
-The following graphs below show the brewery count per state. First a bar graph gives an indication of the distribution of breweries among states. As expected smaller states tend
-to have less breweries while larger states have more. From here we can quickly see that the state with the most breweries is Colorado. 
+The following graphs below show the brewery count per state. 
+First a bar graph gives an indication of the distribution of breweries among states. 
+As expected smaller states tend to have less breweries while larger states have more. 
+From here we can quickly see that the state with the most breweries is Colorado. 
 ```{r}
 # Wrangling the data and plot
 breweries1 = breweries %>%
@@ -62,7 +67,8 @@ head(topbreweries)
 ```
 
 ## 1.2. Building a Brewery Count Heatmap
-Here we have included a map of the US showing each state labeled with its corresponding brewery count. Just another way to visualize this data.
+Here we have included a map of the US showing each state labeled with its corresponding 
+brewery count. Just another way to visualize this data.
 ```{r}
 # Pulling centroid positions for US heatmap
 centroid_labels <- utils::read.csv(system.file("extdata", paste0("us_", "states", "_centroids.csv"), package = "usmap"), stringsAsFactors = FALSE)
@@ -96,7 +102,8 @@ plot_usmap(include = c("DC", "MD", "DE", "CT", "NH", "MA", "VT", "NJ", "RI"), co
 ```
 
 ## 1.3. Building a Brewery Density versus Population Heatmap
-From the map in section 1.2 we realized that a density vs population map would help give further insight. The following density map was created to show states where the population
+From the map in section 1.2 we realized that a density vs population map would help give 
+further insight. The following density map was created to show states where the population
 was either oversaturated or undersaturated with breweries. 
 ```{r}
 # Facilitating the merge
@@ -133,9 +140,12 @@ tail(mergedData)
 ```
 
 ## 3. Addressing The Missing Values In Each Column
-From the data provided, 62 values are missing in the ABV column, and 1005 are missing in the IBU column. In order to move forward with the investigation we needed to impute these values.
-First we started by visualing the data. As shown in the first graph below the distribution of ABV is fairly normal. Based on this we decided to use the mean of the data set in order to replace the missing values.
-Next we generated a graph of the IBU data. As is shown in the graph the data is right skewed. Therefore we chose the median of IBU as a replacement for the missing values since the median is robust to skewness. 
+From the data provided, 62 values are missing in the ABV column, and 1005 are missing in the IBU column. 
+In order to move forward with the investigation we needed to impute these values.
+First we started by visualing the data. As shown in the first graph below the distribution of ABV is fairly normal. 
+Based on this we decided to use the mean of the data set in order to replace the missing values.
+Next we generated a graph of the IBU data. As is shown in the graph the data is right skewed. 
+Therefore we chose the median of IBU as a replacement for the missing values since the median is robust to skewness. 
 ```{r}
 # Inspecting Data
 length(unique(breweries$State))
@@ -187,7 +197,9 @@ mergedData[which.max(mergedData$IBU), "State"]
 ```
 
 ## 6. Summary and Distribution of the ABV variable
-ABV has a minimum of 0.001, a maximum of 0.128, a mean of 0.060, and a median of 0.057. Its standard deviation is 0.013 and its 1st and 3rd quarters are 0.050 and 0.067, respectively. The distribution of ABV is roughly normal based on the histogram, and both the scatterplot and boxplot show lots of variance and outliers.
+ABV has a minimum of 0.001, a maximum of 0.128, a mean of 0.060, and a median of 0.057. 
+Its standard deviation is 0.013 and its 1st and 3rd quarters are 0.050 and 0.067, respectively. 
+The distribution of ABV is roughly normal based on the histogram, and both the scatterplot and boxplot show lots of variance and outliers.
 ```{r}
 str(mergedData[c("ABV")])
 summary(mergedData[c("ABV")])
@@ -211,7 +223,8 @@ boxplot(mergedData$ABV, horizontal = TRUE, notch = TRUE)
 ```
 
 ## 7. Relationship Between Bitterness and Alcoholic Content
-As shown in the scatter plot there does appear to be an apparent relationship between ABV and IBU. The relationship is fairly linear, with a rise in IBU corresponding in a rise in ABV.
+As shown in the scatter plot there does appear to be an apparent relationship between ABV and IBU. 
+The relationship is fairly linear, with a rise in IBU corresponding in a rise in ABV.
 With an r value of 0.51 we can consider this as a moderately correlated relationship. 
 ```{r}
 # Scatter plot of relationship of IBU and ABV
@@ -222,7 +235,8 @@ ggscatter(mergedData, x = "IBU", y = "ABV",
 ```
 
 ## 8.1. Using KNN, investigate the difference with respect to IBU and ABV, between IPAs and other types of Ale
-We initially checked for NAs in the data, before training a 70/30 KNN model that results to 80.43% accuracy and a confidence interval of (0.7651, 0.8396). The sensitivity is 0.8874 and the specificity is 0.6587.
+We initially checked for NAs in the data, before training a 70/30 KNN model that results to 80.43% accuracy 
+and a confidence interval of (0.7651, 0.8396). The sensitivity is 0.8874 and the specificity is 0.6587.
 ```{r}
 # Checking NA's
 colSums(is.na(mergedData))
@@ -254,7 +268,8 @@ confusionMatrix(table(classifications, test$Style))
 ```
 
 ## 8.2. Hypertuning K
-We also wanted to solidify our results by hypertuning the K in our model, as well as the randomized seed, for 100 times. The best K to use is 4 with an accuracy of 83.70%.
+We also wanted to solidify our results by hypertuning the K in our model, as well as the randomized seed, 
+for 100 times. The best K to use is 4 with an accuracy of 83.70%.
 ```{r}
 # Set placeholders for accuracy and k
 hypertune = data.frame(accuracy = numeric(100), k = numeric(100))
@@ -285,7 +300,8 @@ which.max(hypertune$accuracy)
 ```
 
 ## 9. Knocking your socks off
-The below pie chart shows the 10 most popular styles of beers. A few interesting things are shown here. First that 9 of the styles from the top 10 are ales.
+The below pie chart shows the 10 most popular styles of beers. A few interesting things are shown here. 
+First that 9 of the styles from the top 10 are ales.
 Second, 56% of all beers are one of these top 10 styles. Third, 27% of all beers are either an APA or an American IPA.
 ```{r}
 # Wrangling the data
@@ -316,7 +332,8 @@ pie(top10beers[[2]], top10_names_and_percentages, col = mypallete, border = "whi
 ```
 
 ## Conclusion
-Thank you for your time. In this investigation we have covered; brewery count per state, beer descriptors per state, nationwide statistics for ABV, the relationships between ABV and IBU, and the top 10 beer styles. 
+Thank you for your time. In this investigation we have covered; brewery count per state, 
+beer descriptors per state, nationwide statistics for ABV, the relationships between ABV and IBU, and the top 10 beer styles. 
 Some notable highlights from this investigation are:
 
 * In the brewery density map we saw that there are a number of states that have a low density of breweries for their population.
