@@ -14,6 +14,8 @@ Things we have found include but are not limited to:
 
 To cap off the investigation, we took an in-depth look into the distributions of the top 10 beers styles to provide an incentive for market expansion.
 
+Attached at the end of the PowerPoint deck is our Youtube presentation links. 
+
 ### Codebook
 1. `doc` - Contains the requirements given by the sponsors
    - `Case_Study_01.pdf` - Contains the description
