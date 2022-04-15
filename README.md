@@ -1,4 +1,5 @@
-# sMU - MSDS 6306: Doing Data Science - Case Study 01
+# MSDS 6306: Doing Data Science - Case Study 01
+# Southern Methodist University
 
 ## Team Members
 - Garrett Shankel
